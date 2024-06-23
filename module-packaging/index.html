@@ -8,7 +8,7 @@
 
         <link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-        <link rel="stylesheet" href="dist/theme/white.css">
+        <link rel="stylesheet" href="dist/theme/moon.css">
 
         <!-- Theme used for syntax highlighting of code -->
         <link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -19,67 +19,130 @@
     <body>
         <div class="reveal">
             <div class="slides">
-                <section data-markdown>
-                    <textarea data-template>
-                        ## Basics of packaging Python programs
-                    </textarea>
-                </section>
-
                 <section>
                     <section>
-                        <h2>First: environments</h2>
+                        <h1>(re)introducing Python packaging</h1>
                     </section>
                     <section>
-                        <h3>Installing packages</h3>
-                        <br/>
-                        <p class="fragment">You often see these instructions to install a package:</p>
-                        <pre class="fragment"><code data-trim class="bash">
-                            pip install [package]         # Use only in virtual environment!
-                            pip install --user [package]  # Almost never use
-                        </code></pre>
-                        <p class="fragment">🚨 Don't do this unless you know what you are doing!</p>
-                    </section>
-                    <section>
-                        <h3>Solution: virtual environments (libraries) and <code>pipx</code> (applications)</h3>
-                        <br/>
-                        <p class="fragment">(and use system package managers like <code>brew</code> when possible)</p>
-                    </section>
-                    <section>
-                        <h3>Virtual environments</h3>
-                        <br/>
-                        <p class="fragment">Use standard library <code>venv</code> module or <code>virtualenv</code> module:</p>
-                        <pre class="fragment"><code data-trim class="bash">
-                            python3 -m venv .venv
-                        </code></pre>
-                        <p class="fragment">Source with:</p>
-                        <pre class="fragment"><code data-trim class="bash">
-                            . .venv/bin/activate 
-                        </code></pre>
-                        <p class="fragment">Now <code>pip</code> install away!</p>
-                    </section>
-                    <section>
-                        <h3>What about conda?</h3>
-                        <br/>
-                        <pre class="fragment"><code data-trim class="bash">
-                            # turn off the default environment
-                            conda config --set auto_activate_base false  
-
-                            conda env create -n some_name  # or use paths with `-p`
-                            conda activate some_name
-                            conda deactivate
-                        </code></pre>
-                    </section>
-                    <section>
-                        <h3>What about command line applications?</h3>
-                        <br/>
-                        <p class="fragment">Use <code>pipx</code>, which creates new virtual environment for package</p>
-                        <pre class="fragment"><code data-trim class="bash">
-                            pipx install [package]
-                            pipx inject ipython matplotlib
-                        </code></pre>
+                        <h2>Outline / Questions</h2>
+                        <p>(The answers come later)</p>
+                        <ul>
+                            <li>What is a Python package?</li>
+                            <li>Why would I make a Python package</li>
+                            <li>How do I turn my code into a Python package that I can <code>import</code></li>
+                            <li>How do I publish my Python package so others can <code>pip install</code>it?</li>
+                        </ul>
                     </section>
                 </section>
+                <section>
+                    <section>
+                        <h2>What is a Python <em>package</em>?</h2>
+                    </section>
+                    <section>
+                        <h3>What is a Python <em>package</em>?</h3>
+                        <p>First, let's define <em>module</em></p>
+                        <p><a href="https://docs.python.org/3/glossary.html#term-module">https://docs.python.org/3/glossary.html#term-module</a></p>
+                        <img src="./images/module-definition.png" height="250">
+                    </section>
+                    <section>
+                        <h3>What is a Python <em>package</em>?</h3>
+                        <p>Deconstructing that definition:</p>
+                        <ul>
+                            <li>When I write <code>import modulename</code> I am loading a module</li>
+                            <ul>
+                                <li>But we also talk about "importing a package"!</li>
+                                <li>This would seem to implyh a package is a kind of module</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>What is a Python <em>package</em>?</h3>
+                        <p>Deconstructing that definition:</p>
+                        <ul>
+                            <li>When I write <code>import modulename</code> I am loading a module</li>
+                            <li>The module can contain "arbitrary Python objects"</li>
+                            <ul>
+                                <li>That could iclude other modules!</li>
+                                <li>It's almost like we need a special name for "a module that can contain other modules"!</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>What is a Python <em>package</em>?</h3>
+                        <p>Deconstructing that definition:</p>
+                        <ul>
+                            <li>When I write <code>import modulename</code> I am loading a module</li>
+                            <li>The module can contain "arbitrary Python objects"</li>
+                            <li>When I load the module, its name gets added to the <em>namespace</em></li>
+                            <ul>
+                                <li><em>namespace</em>: a collection of currently defined names and they objects they reference</li>
+                                <li>
+                                    So now I can use the module name to access things inside of it with dot notation, 
+                                    like another module that contains a function: <code>numpy.random.default_rng</code>
+                                </li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Aside: why does Python have modules?</h3>
+                        <p>Because it's good for your code to be <em>modular</em>.</p>
+                        
+                    </section>
 
+                    <section>
+                        <p class="fragment">Trick question: the word "package" is overloaded in Python</p>
+                        <p class="fragment">
+                            We'll fix this by talking about <em>import packages</em> and <em>distribution packages</em>
+
+                            See <a href="https://packaging.python.org/en/latest/discussions/distribution-package-vs-import-package/">"Distribution package vs import package"</a> 
+                            on the Python Packaging User Guide.
+                        </p>
+                    </section>
+                    <section>
+                        <h3>Import package</h3>
+                        <ul>
+                            <li>A Python module that you can <code>import</code> in your code. Usually this is what we mean hen we say "Python package".</li>
+                            <li>An import package is a module that can contain other modules. Think of it as a toolbox full of tools you use in your own code.</li>
+                        </ul>
+                        <p class="fragment">
+                            To make it so that you and other people can import your own code, 
+                            you make a directory with a specific structure,
+                            that we're going to teach you today.
+                        </p>
+                    </section>
+                    <section>
+                        <h3>Distribution package</h3>
+                        <ul>
+                            <li>A piece of software you can install.
+                            Other languages and even operating systems also have 
+                            distribution packages, that you install with a package manager.
+                            This is the kind of package you get when you write <code>pip install pkg</code>.</li>
+                            <li>To make it so that other people can <code>pip install</code> your import package, 
+                            you have to build a distribution package.</li>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h2>When should I make a package?</h2>
+                    </section>
+                    <section>
+                        <h3>When might I make an (import) package?</h3>
+                        <ul>
+                            <li>Code for a paper</li>
+                            <li>A set of common functions you use across projects</li>
+                            <li>A <em>generalized</em> tool that other researchers can use</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>When should I make an (distribution) package?</h3>
+                        <ul>
+                            <li><s>Code for a paper</s></li>
+                            <li>A generalized tool that other researchers can use</li>
+                        </ul>
+                    </section>
+
+                </section>
                 <section>
                     <section>
                         <h2>(Python) packaging</h1>
@@ -733,7 +796,7 @@
                 </section>
             </div>
         </div>
-
+        
 		<script src="dist/reveal.js"></script>
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
